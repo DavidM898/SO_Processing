@@ -1,0 +1,184 @@
+.controls-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.top-controls {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.bottom-controls {
+  display: flex;
+  justify-content: center;
+}
+
+.control-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.ctrl-btn {
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  min-width: 80px;
+}
+
+.ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.ctrl-btn:active {
+  transform: translateY(1px);
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.ctrl-btn.spawn {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  min-width: 100px;
+}
+
+.ctrl-btn.spawn:hover {
+  background: linear-gradient(135deg, #5CBF60, #55b059);
+}
+
+.ctrl-btn.spawn:active {
+  background: linear-gradient(135deg, #3C9F40, #359039);
+}
+
+.ctrl-btn.active {
+  background: linear-gradient(135deg, #2196F3, #1976D2);
+  box-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
+}
+
+.ctrl-btn.danger {
+  background: linear-gradient(135deg, #f44336, #d32f2f);
+}
+
+.ctrl-btn.danger:hover {
+  background: linear-gradient(135deg, #ff5252, #e33e3e);
+}
+
+.ctrl-btn.mode-btn {
+  background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+  min-width: 120px;
+}
+
+.ctrl-btn.info-btn {
+  background: linear-gradient(135deg, #FF9800, #F57C00);
+}
+
+.ctrl-btn.reset-btn {
+  background: linear-gradient(135deg, #607D8B, #455A64);
+}
+
+.ctrl-btn.small {
+  padding: 8px 12px;
+  font-size: 12px;
+  min-width: 50px;
+}
+
+.dest-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.mode-selector {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 30, 40, 0.98);
+  border-radius: 12px;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  z-index: 1000;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 280px;
+}
+
+.mode-option {
+  padding: 12px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+}
+
+.mode-option:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.mode-option.active {
+  background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .ctrl-btn {
+    padding: 14px 16px;
+    font-size: 13px;
+    min-width: 70px;
+  }
+
+  .ctrl-btn.small {
+    padding: 10px 10px;
+    min-width: 45px;
+  }
+
+  .mode-selector {
+    grid-template-columns: repeat(3, 1fr);
+    min-width: 260px;
+  }
+
+  .mode-option {
+    padding: 14px 6px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 400px) {
+  .ctrl-btn {
+    padding: 12px 12px;
+    font-size: 12px;
+    min-width: 60px;
+  }
+
+  .ctrl-btn.mode-btn {
+    min-width: 100px;
+  }
+
+  .mode-selector {
+    grid-template-columns: repeat(2, 1fr);
+    min-width: 200px;
+  }
+}

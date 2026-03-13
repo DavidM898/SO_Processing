@@ -1,0 +1,34 @@
+.simulator-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.canvas-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.canvas-container canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+@media (max-width: 768px) {
+  .simulator-wrapper {
+    gap: 8px;
+  }
+
+  .canvas-container {
+    border-radius: 0;
+  }
+}
