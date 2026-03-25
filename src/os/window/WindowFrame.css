@@ -1,0 +1,115 @@
+.window-frame {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  background: var(--win-frame-bg);
+  border: 1px solid var(--win-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  animation: win-open 0.15s ease-out;
+  transition: box-shadow 0.15s;
+}
+
+.window-frame.maximized {
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: var(--win-taskbar-h) !important;
+  width: auto !important;
+  height: auto !important;
+  border-radius: 0;
+}
+
+.window-frame.focused {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0, 120, 212, 0.3);
+}
+
+@keyframes win-open {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Title bar */
+.window-titlebar {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  min-height: 32px;
+  background: var(--win-titlebar-bg);
+  padding: 0 0 0 8px;
+  cursor: default;
+  flex-shrink: 0;
+  gap: 6px;
+  border-bottom: 1px solid var(--win-border);
+}
+
+.window-titlebar.focused {
+  background: var(--win-titlebar-active);
+}
+
+.window-icon {
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.window-title {
+  flex: 1;
+  font-size: 12px;
+  color: var(--win-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+
+/* Window control buttons */
+.window-controls {
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  margin-left: auto;
+  height: 32px;
+}
+
+.win-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  color: var(--win-text);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.1s;
+  font-family: 'Segoe MDL2 Assets', 'Segoe UI', system-ui, sans-serif;
+}
+
+.win-btn:hover {
+  background: var(--win-btn-hover);
+}
+
+.win-close:hover {
+  background: var(--win-close-hover);
+  color: #fff;
+}
+
+/* Content area */
+.window-content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  background: var(--win-content-bg);
+}
+
+.window-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--win-text-secondary);
+  font-size: 13px;
+}

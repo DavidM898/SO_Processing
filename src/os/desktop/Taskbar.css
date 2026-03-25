@@ -1,0 +1,143 @@
+.taskbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--win-taskbar-h);
+  background: var(--win-taskbar-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 4px;
+  z-index: 9999;
+}
+
+.taskbar-start {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--win-text);
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+  height: 32px;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.taskbar-start:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.start-logo {
+  font-size: 16px;
+  color: var(--win-accent);
+}
+
+.start-label {
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+.taskbar-apps {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.taskbar-app-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--win-text);
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+  height: 32px;
+  max-width: 160px;
+  min-width: 80px;
+  transition: background 0.15s;
+  position: relative;
+}
+
+.taskbar-app-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.taskbar-app-btn.active {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.taskbar-app-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: var(--win-accent);
+  border-radius: 2px;
+}
+
+.taskbar-app-btn.minimized {
+  opacity: 0.6;
+}
+
+.taskbar-app-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.taskbar-app-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.taskbar-tray {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  flex-shrink: 0;
+}
+
+.taskbar-clock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: default;
+  transition: background 0.15s;
+}
+
+.taskbar-clock:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.clock-time {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--win-text);
+}
+
+.clock-date {
+  font-size: 10px;
+  color: var(--win-text-secondary);
+}
