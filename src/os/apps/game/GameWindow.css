@@ -1,0 +1,20 @@
+/*
+ * Scoped overrides for the simulator rendered inside the OS game window.
+ * These rules must not modify the simulator source files.
+ */
+
+/* Give controls-container a stacking context so mode-selector positions relative to it */
+.game-window-container .controls-container {
+  position: relative;
+}
+
+/*
+ * Open the mode selector UPWARD (above the controls bar) instead of downward.
+ * This avoids the dropdown being clipped by the window frame's overflow:hidden
+ * at whatever window height the user has chosen.
+ */
+.game-window-container .mode-selector {
+  top: auto;
+  bottom: 100%;
+  margin-bottom: 4px;
+}

@@ -1,0 +1,26 @@
+:root {
+  --win-taskbar-bg: rgba(15, 15, 15, 0.92);
+  --win-taskbar-h: 40px;
+  --win-frame-bg: #202020;
+  --win-titlebar-bg: #2b2b2b;
+  --win-titlebar-active: #1a1a1a;
+  --win-close-hover: #e81123;
+  --win-min-hover: #3d3d3d;
+  --win-max-hover: #3d3d3d;
+  --win-btn-hover: #3d3d3d;
+  --win-accent: #0078d4;
+  --win-text: #f0f0f0;
+  --win-text-secondary: #aaaaaa;
+  --win-border: #3a3a3a;
+  --win-content-bg: #1e1e1e;
+}
+
+.desktop {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #0b2033 0%, #1c3f5a 40%, #0d3a2a 100%);
+  overflow: hidden;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: var(--win-text);
+  user-select: none;
+}

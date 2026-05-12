@@ -1,0 +1,186 @@
+.pm {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #1a1a1a;
+  color: #f0f0f0;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 13px;
+}
+
+/* Summary */
+.pm-summary {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 10px 16px;
+  background: #222;
+  border-bottom: 1px solid #333;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.pm-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pm-stat-label {
+  font-size: 10px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pm-stat-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.pm-note {
+  margin-left: auto;
+  font-size: 10px;
+  color: #555;
+  font-style: italic;
+}
+
+/* Graph */
+.pm-graph-section {
+  padding: 8px 16px 4px;
+  background: #1a1a1a;
+  border-bottom: 1px solid #2a2a2a;
+  flex-shrink: 0;
+}
+
+.pm-graph-label {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+/* Table */
+.pm-table-wrap {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #444 #1a1a1a;
+}
+
+.pm-table-wrap::-webkit-scrollbar { width: 6px; }
+.pm-table-wrap::-webkit-scrollbar-track { background: #1a1a1a; }
+.pm-table-wrap::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+
+.pm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.pm-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #252525;
+}
+
+.pm-table th {
+  padding: 6px 10px;
+  text-align: left;
+  font-weight: 600;
+  color: #aaa;
+  border-bottom: 1px solid #333;
+  white-space: nowrap;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.pm-row td {
+  padding: 5px 10px;
+  border-bottom: 1px solid #222;
+  vertical-align: middle;
+}
+
+.pm-row:hover td {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.pm-row-system .pm-name {
+  color: #ccc;
+}
+
+.pm-row-app .pm-name {
+  color: #fff;
+  font-weight: 500;
+}
+
+.pm-pid {
+  color: #666;
+  font-variant-numeric: tabular-nums;
+  width: 48px;
+}
+
+.pm-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pm-type-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pm-type {
+  color: #777;
+  width: 60px;
+}
+
+.pm-cpu {
+  width: 120px;
+}
+
+.pm-bar-wrap {
+  position: relative;
+  height: 16px;
+  background: #2a2a2a;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.pm-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease, background 0.5s ease;
+}
+
+.pm-bar-label {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 0 4px rgba(0,0,0,0.8);
+  font-variant-numeric: tabular-nums;
+}
+
+.pm-mem {
+  color: #aaa;
+  font-variant-numeric: tabular-nums;
+  width: 80px;
+}
+
+.pm-uptime {
+  color: #666;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
