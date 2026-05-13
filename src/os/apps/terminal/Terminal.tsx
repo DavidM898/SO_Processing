@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useWindows } from '../../context/WindowContext';
 import { useProcesses } from '../../context/ProcessContext';
+import { useFileSystem } from '../../context/FileSystemContext';
+import { tryHandleFilesystemCommand } from './terminalFsCommands';
 import { APP_DEFAULTS, type AppId } from '../../types';
 import './Terminal.css';
 
@@ -28,6 +30,18 @@ const HELP_TEXT = [
   '  archivos      Abre el Explorador de Archivos',
   '  abrir juego   Abre el Simulador de Concurrencia',
   '  cls / clear   Limpia la terminal',
+  '  ─── Sistema de archivos (VFS compartido) ───',
+  '  whoami        Usuario activo',
+  '  users         Listar cuentas del sistema',
+  '  useradd <n>   Crear cuenta (solo root)',
+  '  userdel <n>   Eliminar cuenta (solo root; sin archivos a su nombre)',
+  '  su <usuario>  Cambiar de sesión (cuenta existente)',
+  '  pwd           Ruta del directorio actual',
+  '  ls / dir      Listar con permisos y dueño',
+  '  cd <carpeta>  cd ..   cd /',
+  '  mkdir / touch / cat / rm',
+  '  echo texto > archivo.txt',
+  '  chmod <octal> <nombre>   chown <usr> <nom> (solo root)',
   '  ─────────────────────────────────────────',
 ];
 
@@ -72,6 +86,7 @@ function executeCommand(raw: string): CommandResult {
 export function Terminal() {
   const { openApp, getWindowByAppId } = useWindows();
   const { registerProcess } = useProcesses();
+  const fs = useFileSystem();
   const [history, setHistory] = useState<HistoryEntry[]>(() =>
     BANNER.map(t => ({ type: 'banner' as const, text: t })),
   );
@@ -115,6 +130,23 @@ export function Terminal() {
     setHistoryIdx(-1);
 
     const inputEntry: HistoryEntry = { type: 'input', text: raw };
+
+    const fsOutcome = tryHandleFilesystemCommand(raw, fs);
+    if (fsOutcome !== null) {
+      if (fsOutcome.kind === 'error') {
+        setHistory(h => [...h, inputEntry, { type: 'error', text: fsOutcome.message }]);
+      } else {
+        setHistory(h => [
+          ...h,
+          inputEntry,
+          ...fsOutcome.lines.map(t => ({ type: 'output' as const, text: t })),
+        ]);
+      }
+      if (raw.trim()) {
+        setCmdHistory(h => [raw, ...h.slice(0, 49)]);
+      }
+      return;
+    }
 
     const result = executeCommand(raw);
 

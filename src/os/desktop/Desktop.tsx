@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { WindowProvider, useWindows } from '../context/WindowContext';
 import { ProcessProvider, useProcesses } from '../context/ProcessContext';
+import { FileSystemProvider } from '../context/FileSystemContext';
 import { WindowLayer } from '../window/WindowLayer';
 import { Taskbar } from './Taskbar';
 import { APP_DEFAULTS } from '../types';
@@ -36,9 +37,11 @@ function DesktopInner() {
 export function Desktop() {
   return (
     <ProcessProvider>
-      <WindowProvider>
-        <DesktopInner />
-      </WindowProvider>
+      <FileSystemProvider>
+        <WindowProvider>
+          <DesktopInner />
+        </WindowProvider>
+      </FileSystemProvider>
     </ProcessProvider>
   );
 }

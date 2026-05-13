@@ -55,12 +55,28 @@ export type ProcessAction =
   | { type: 'UNREGISTER'; pid: number }
   | { type: 'TICK' };
 
+/** Bits estilo Unix (r=lectura, w=escritura, x=ejecución; en carpetas x = poder entrar). */
+export interface FSAccessBits {
+  read: boolean;
+  write: boolean;
+  execute: boolean;
+}
+
+/** Permisos del propietario vs el resto de usuarios (modelo didáctico simplificado). */
+export interface FSPermissions {
+  owner: FSAccessBits;
+  others: FSAccessBits;
+}
+
 export interface FSNode {
   id: string;
   name: string;
   type: 'folder' | 'file';
   parentId: string | null;
   createdAt: number;
+  /** Usuario dueño del nodo (simulado). */
+  owner: string;
+  permissions: FSPermissions;
   content?: string;
   sizeBytes?: number;
 }
