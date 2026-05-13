@@ -3,7 +3,8 @@ export type AppId =
   | 'processmanager'
   | 'calculator'
   | 'filemanager'
-  | 'game';
+  | 'game'
+  | 'texteditor';
 
 export interface WindowDef {
   id: string;
@@ -87,4 +88,43 @@ export const APP_DEFAULTS: Record<AppId, { w: number; h: number; title: string; 
   calculator:     { w: 320,  h: 480,  title: 'Calculadora',                  processName: 'Calculadora.exe' },
   filemanager:    { w: 720,  h: 500,  title: 'Explorador de Archivos',       processName: 'Explorer.exe' },
   game:           { w: 880,  h: 660,  title: 'Simulador de Concurrencia',    processName: 'Simulador.exe' },
+  texteditor:     { w: 640,  h: 500,  title: 'Bloc de notas',                processName: 'Notepad.exe' },
 };
+
+/** Icono y descripción corta para el menú Inicio y ayudas. */
+export const APP_CATALOG: Record<AppId, { icon: string; description: string }> = {
+  filemanager: {
+    icon: '📁',
+    description: 'Navegar el VFS, permisos y editor integrado en archivos',
+  },
+  game: {
+    icon: '🚗',
+    description: 'Simulador visual de concurrencia y sincronización',
+  },
+  terminal: {
+    icon: '⬛',
+    description: 'Comandos, usuarios y sistema de archivos por consola',
+  },
+  processmanager: {
+    icon: '📊',
+    description: 'Procesos simulados y uso de CPU',
+  },
+  calculator: {
+    icon: '🔢',
+    description: 'Calculadora básica',
+  },
+  texteditor: {
+    icon: '📝',
+    description: 'Editar y guardar archivos de texto en el directorio actual (cd en terminal)',
+  },
+};
+
+/** Orden en el explorador de aplicaciones (menú urlOS). */
+export const APP_MENU_ORDER: readonly AppId[] = [
+  'filemanager',
+  'game',
+  'terminal',
+  'processmanager',
+  'calculator',
+  'texteditor',
+] as const;

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useLayoutEffect, useRef, useCallback, useState } from 'react';
 import p5 from 'p5';
 import type { InstructionData } from './types';
 import { W, H, COLORS } from './types';
@@ -205,6 +205,7 @@ const INSTRUCTIONS: Record<number, InstructionData> = {
 export default function SimulatorWrapper() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
+  const layoutP5Ref = useRef<(() => void) | null>(null);
   const p5Ref = useRef<p5 | null>(null);
   const [, forceUpdate] = useState(0);
 
@@ -558,12 +559,47 @@ export default function SimulatorWrapper() {
     }
   }, [addEvent, m7ForceResolve, triggerUpdate]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!canvasContainerRef.current) return;
+
+    let cancelled = false;
+    let ro: ResizeObserver | null = null;
+    let mountAttempts = 0;
 
     const sketch = (p: p5) => {
       const s = stateRef.current;
       let scale = 1;
+      let canvasCreated = false;
+
+      const applyLayout = () => {
+        const host = canvasContainerRef.current;
+        if (!host) return;
+        let { width: cw, height: ch } = host.getBoundingClientRect();
+        // Sin tamaño real aún: no crear un lienzo de 2×2 px; el ResizeObserver volverá a medir.
+        if (cw < 8 || ch < 8) {
+          if (canvasCreated) return;
+          scale = 0.45;
+          const bw = Math.max(2, Math.floor(W * scale));
+          const bh = Math.max(2, Math.floor(H * scale));
+          p.pixelDensity(1);
+          p.createCanvas(bw, bh);
+          canvasCreated = true;
+          return;
+        }
+        const fit = Math.min(cw / W, ch / H);
+        scale = Math.min(1, Math.max(fit, 0.02));
+        const bw = Math.max(2, Math.floor(W * scale));
+        const bh = Math.max(2, Math.floor(H * scale));
+        p.pixelDensity(1);
+        if (!canvasCreated) {
+          p.createCanvas(bw, bh);
+          canvasCreated = true;
+        } else {
+          p.resizeCanvas(bw, bh);
+        }
+      };
+
+      layoutP5Ref.current = applyLayout;
 
       const m1Step = () => {
         if (s.m1Flash > 0) s.m1Flash--;
@@ -940,17 +976,13 @@ export default function SimulatorWrapper() {
       };
 
       p.setup = () => {
-        const container = canvasContainerRef.current;
-        if (container) {
-          const cw = container.clientWidth;
-          scale = Math.min(1, cw / W);
-        }
-        p.createCanvas(W * scale, H * scale);
+        applyLayout();
         p.textFont('monospace');
         m1Reset();
       };
 
       p.draw = () => {
+        p.resetMatrix();
         p.scale(scale);
         if (s.showInstructions) drawInstructions();
         else {
@@ -966,7 +998,8 @@ export default function SimulatorWrapper() {
 
       p.mousePressed = () => {
         if (s.showInstructions) return;
-        const mx = p.mouseX / scale, my = p.mouseY / scale;
+        const mx = p.mouseX / scale;
+        const my = p.mouseY / scale;
         const cars = getCurrentCars();
         for (const c of cars) {
           if (c.clicked(mx, my)) {
@@ -979,17 +1012,34 @@ export default function SimulatorWrapper() {
       };
 
       p.windowResized = () => {
-        const container = canvasContainerRef.current;
-        if (container) {
-          const cw = container.clientWidth;
-          scale = Math.min(1, cw / W);
-          p.resizeCanvas(W * scale, H * scale);
-        }
+        applyLayout();
       };
     };
 
-    p5Ref.current = new p5(sketch, canvasContainerRef.current);
-    return () => { p5Ref.current?.remove(); };
+    const tryMountP5 = () => {
+      const host = canvasContainerRef.current;
+      if (cancelled || !host) return;
+      const { width: cw, height: ch } = host.getBoundingClientRect();
+      if ((cw < 32 || ch < 32) && mountAttempts++ < 160) {
+        requestAnimationFrame(tryMountP5);
+        return;
+      }
+      if (p5Ref.current) return;
+      p5Ref.current = new p5(sketch, host);
+      ro = new ResizeObserver(() => layoutP5Ref.current?.());
+      ro.observe(host);
+      requestAnimationFrame(() => layoutP5Ref.current?.());
+    };
+
+    tryMountP5();
+
+    return () => {
+      cancelled = true;
+      ro?.disconnect();
+      layoutP5Ref.current = null;
+      p5Ref.current?.remove();
+      p5Ref.current = null;
+    };
   }, [addEvent, cleanCarFromAll, m1Reset, m1Spawn, m2Reset, m2Spawn, m3Reset, m3Spawn, m4ForceExit, m4Reset, m4Spawn, m5ForceExit, m5Reset, m5Spawn, m6Reset, m6Spawn, m7ForceResolve, m7Reset, m7SpawnPair, m8Reset, m8Spawn]);
 
   const s = stateRef.current;
@@ -997,19 +1047,21 @@ export default function SimulatorWrapper() {
   return (
     <div className="simulator-wrapper" ref={containerRef}>
       <div className="canvas-container" ref={canvasContainerRef} />
-      <Controls
-        currentMode={s.currentMode}
-        showInstructions={s.showInstructions}
-        onModeChange={handleModeChange}
-        onToggleInstructions={handleToggleInstructions}
-        onReset={handleReset}
-        onSpawn={handleSpawn}
-        onSpecialAction={handleSpecialAction}
-        m4Cap={s.m4Cap}
-        m6Policy={s.m6Policy}
-        m7Prevent={s.m7Prevent}
-        m8NextDest={s.m8NextDest}
-      />
+      <div className="simulator-controls-slot">
+        <Controls
+          currentMode={s.currentMode}
+          showInstructions={s.showInstructions}
+          onModeChange={handleModeChange}
+          onToggleInstructions={handleToggleInstructions}
+          onReset={handleReset}
+          onSpawn={handleSpawn}
+          onSpecialAction={handleSpecialAction}
+          m4Cap={s.m4Cap}
+          m6Policy={s.m6Policy}
+          m7Prevent={s.m7Prevent}
+          m8NextDest={s.m8NextDest}
+        />
+      </div>
     </div>
   );
 }

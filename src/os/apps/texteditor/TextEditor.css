@@ -1,0 +1,116 @@
+.text-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--win-content-bg);
+  color: var(--win-text);
+}
+
+.te-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--win-border);
+  flex-shrink: 0;
+}
+
+.te-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--win-text-secondary);
+  min-width: 0;
+}
+
+.te-grow {
+  flex: 1 1 140px;
+}
+
+.te-path {
+  font-size: 12px;
+  color: var(--win-text);
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.te-select,
+.te-input {
+  min-height: 28px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--win-border);
+  background: #2a2a2a;
+  color: var(--win-text);
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.te-select {
+  min-width: 160px;
+}
+
+.te-input {
+  width: 100%;
+  max-width: 220px;
+}
+
+.te-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.te-btn {
+  padding: 6px 14px;
+  border-radius: 4px;
+  border: 1px solid var(--win-border);
+  background: #333;
+  color: var(--win-text);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.te-btn:hover {
+  background: #3d3d3d;
+}
+
+.te-btn-primary {
+  background: var(--win-accent);
+  border-color: transparent;
+}
+
+.te-btn-primary:hover {
+  filter: brightness(1.08);
+}
+
+.te-status {
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--win-text-secondary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+}
+
+.te-area {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 12px;
+  border: none;
+  resize: none;
+  background: #1a1a1a;
+  color: #e8e8e8;
+  font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.te-area:focus {
+  outline: none;
+}
