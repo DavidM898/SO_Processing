@@ -100,6 +100,7 @@
 /* Content area */
 .window-content {
   flex: 1;
+  min-height: 0;
   overflow: hidden;
   position: relative;
   background: var(--win-content-bg);

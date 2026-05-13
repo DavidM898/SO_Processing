@@ -9,14 +9,12 @@ export function GameWindow() {
     const container = containerRef.current;
     if (!container) return;
 
-    // SimulatorWrapper already has internal p5 scaling logic (p.windowResized).
-    // It reads canvasContainerRef.clientWidth and resizes the canvas accordingly.
-    // We just need to trigger that handler whenever the OS window changes size,
-    // and once on mount (with a small delay) to ensure layout is settled after
-    // the lazy import resolves and the DOM is fully painted.
+    // p5 escucha `windowResized`; al abrir la ventana desde la terminal el flex aún no ha medido.
     const triggerResize = () => window.dispatchEvent(new Event('resize'));
 
     const t = setTimeout(triggerResize, 30);
+    queueMicrotask(triggerResize);
+    requestAnimationFrame(() => requestAnimationFrame(triggerResize));
 
     const ro = new ResizeObserver(triggerResize);
     ro.observe(container);
@@ -34,7 +32,10 @@ export function GameWindow() {
       style={{
         width: '100%',
         height: '100%',
-        overflow: 'auto',
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
         background: '#1a1a2e',
       }}
     >
