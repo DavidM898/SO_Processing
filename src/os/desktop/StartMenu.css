@@ -1,0 +1,80 @@
+.start-menu {
+  position: fixed;
+  left: 4px;
+  bottom: calc(var(--win-taskbar-h) + 4px);
+  width: min(360px, calc(100vw - 16px));
+  max-height: min(520px, calc(100vh - var(--win-taskbar-h) - 24px));
+  display: flex;
+  flex-direction: column;
+  z-index: 10000;
+  background: rgba(22, 22, 22, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  overflow: hidden;
+}
+
+.start-menu-header {
+  padding: 12px 14px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--win-text-secondary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.start-menu-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+}
+
+.start-menu-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--win-text);
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.start-menu-item:hover,
+.start-menu-item:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+  outline: none;
+}
+
+.start-menu-icon {
+  font-size: 22px;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.start-menu-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.start-menu-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.start-menu-desc {
+  font-size: 12px;
+  color: var(--win-text-secondary);
+  line-height: 1.35;
+}

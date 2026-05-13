@@ -1,9 +1,8 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { useWindows } from '../../context/WindowContext';
-import { useProcesses } from '../../context/ProcessContext';
+import { useState, useRef, useEffect } from 'react';
 import { useFileSystem } from '../../context/FileSystemContext';
 import { tryHandleFilesystemCommand } from './terminalFsCommands';
 import { APP_DEFAULTS, type AppId } from '../../types';
+import { useLaunchApp } from '../../hooks/useLaunchApp';
 import './Terminal.css';
 
 interface HistoryEntry {
@@ -28,6 +27,7 @@ const HELP_TEXT = [
   '  procesos      Abre el Administrador de Tareas',
   '  calculadora   Abre la Calculadora',
   '  archivos      Abre el Explorador de Archivos',
+  '  bloc / editor Abre el Bloc de notas (texto en carpeta actual)',
   '  abrir juego   Abre el Simulador de Concurrencia',
   '  cls / clear   Limpia la terminal',
   '  ─── Sistema de archivos (VFS compartido) ───',
@@ -74,6 +74,9 @@ function executeCommand(raw: string): CommandResult {
   if (cmd === 'abrir juego') {
     return { kind: 'open_app', appId: 'game' };
   }
+  if (cmd === 'bloc' || cmd === 'editor' || cmd === 'notepad') {
+    return { kind: 'open_app', appId: 'texteditor' };
+  }
   if (cmd === 'cls' || cmd === 'clear') {
     return { kind: 'clear' };
   }
@@ -84,8 +87,7 @@ function executeCommand(raw: string): CommandResult {
 }
 
 export function Terminal() {
-  const { openApp, getWindowByAppId } = useWindows();
-  const { registerProcess } = useProcesses();
+  const launchApp = useLaunchApp();
   const fs = useFileSystem();
   const [history, setHistory] = useState<HistoryEntry[]>(() =>
     BANNER.map(t => ({ type: 'banner' as const, text: t })),
@@ -105,24 +107,6 @@ export function Terminal() {
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
-
-  const openOrFocusApp = useCallback((appId: AppId) => {
-    const existing = getWindowByAppId(appId);
-    if (existing) {
-      openApp(appId, existing.pid);
-      return;
-    }
-    const def = APP_DEFAULTS[appId];
-    const pid = registerProcess({
-      name: def.processName,
-      type: 'app',
-      appId,
-      cpuPercent: 3,
-      memoryMB: Math.round(20 + Math.random() * 40),
-      startedAt: Date.now(),
-    });
-    openApp(appId, pid);
-  }, [openApp, getWindowByAppId, registerProcess]);
 
   const submit = () => {
     const raw = input;
@@ -156,7 +140,7 @@ export function Terminal() {
     }
 
     if (result.kind === 'open_app') {
-      openOrFocusApp(result.appId);
+      launchApp(result.appId);
       setHistory(h => [
         ...h,
         inputEntry,

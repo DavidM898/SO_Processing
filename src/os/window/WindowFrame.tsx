@@ -1,8 +1,8 @@
 import { useRef, lazy, Suspense } from 'react';
 import type { WindowDef, AppId } from '../types';
+import { APP_CATALOG } from '../types';
 import { useWindows } from '../context/WindowContext';
 import { useProcesses } from '../context/ProcessContext';
-import { APP_DEFAULTS } from '../types';
 import './WindowFrame.css';
 
 // Lazy-load each app to avoid circular imports and improve initial load
@@ -11,6 +11,7 @@ const ProcessManager = lazy(() => import('../apps/processmanager/ProcessManager'
 const Calculator     = lazy(() => import('../apps/calculator/Calculator').then(m => ({ default: m.Calculator })));
 const FileManager    = lazy(() => import('../apps/filemanager/FileManager').then(m => ({ default: m.FileManager })));
 const GameWindow     = lazy(() => import('../apps/game/GameWindow').then(m => ({ default: m.GameWindow })));
+const TextEditor     = lazy(() => import('../apps/texteditor/TextEditor').then(m => ({ default: m.TextEditor })));
 
 const APP_COMPONENTS: Record<AppId, React.ComponentType> = {
   terminal:       Terminal,
@@ -18,14 +19,7 @@ const APP_COMPONENTS: Record<AppId, React.ComponentType> = {
   calculator:     Calculator,
   filemanager:    FileManager,
   game:           GameWindow,
-};
-
-const APP_ICONS: Record<AppId, string> = {
-  terminal:       '⬛',
-  processmanager: '📊',
-  calculator:     '🔢',
-  filemanager:    '📁',
-  game:           '🚗',
+  texteditor:     TextEditor,
 };
 
 interface WindowFrameProps {
@@ -104,7 +98,7 @@ export function WindowFrame({ win }: WindowFrameProps) {
         onPointerDown={handleTitleBarPointerDown}
         onDoubleClick={handleMaximize}
       >
-        <span className="window-icon">{APP_ICONS[win.appId]}</span>
+        <span className="window-icon">{APP_CATALOG[win.appId].icon}</span>
         <span className="window-title">{win.title}</span>
         {/* Stop pointer events from bubbling to the drag handler so click events reach the buttons */}
         <div className="window-controls" onPointerDown={e => e.stopPropagation()}>
@@ -126,5 +120,3 @@ export function WindowFrame({ win }: WindowFrameProps) {
   );
 }
 
-// Re-export APP_DEFAULTS usage for Desktop
-export { APP_DEFAULTS };
