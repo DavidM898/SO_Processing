@@ -13,6 +13,8 @@ interface ControlsProps {
   m6Policy?: number;
   m7Prevent?: boolean;
   m8NextDest?: string;
+  m9PolicyIdx?: number;
+  m9PriPreempt?: boolean;
 }
 
 const MODE_NAMES = [
@@ -25,7 +27,10 @@ const MODE_NAMES = [
   '6: Planif',
   '7: Deadlock',
   '8: Completo',
+  '9: CPU/PCB',
 ];
+
+const M9_POLICY_LABELS_SHORT = ['FCFS', 'SJF', 'SRTF', 'RR', 'Pri-NP', 'Pri-P'];
 
 const POLICY_NAMES = ['FIFO', 'SJF', 'RR'];
 
@@ -41,6 +46,8 @@ export default function Controls({
   m6Policy = 0,
   m7Prevent = false,
   m8NextDest = 'auto',
+  m9PolicyIdx = 0,
+  m9PriPreempt = true,
 }: ControlsProps) {
   const [showModeSelector, setShowModeSelector] = useState(false);
 
@@ -156,6 +163,24 @@ export default function Controls({
                 Auto
               </button>
             </div>
+          </div>
+        );
+
+      case 9:
+        return (
+          <div className="control-group">
+            <button className="ctrl-btn spawn" onClick={() => onSpawn()}>
+              Nuevo proceso
+            </button>
+            <button className="ctrl-btn" onClick={() => onSpecialAction('p')}>
+              {M9_POLICY_LABELS_SHORT[m9PolicyIdx % M9_POLICY_LABELS_SHORT.length]}
+            </button>
+            <button
+              className={`ctrl-btn ${m9PriPreempt ? 'active' : ''}`}
+              onClick={() => onSpecialAction('o')}
+            >
+              Pri-P preempt
+            </button>
           </div>
         );
 
