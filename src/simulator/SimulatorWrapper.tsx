@@ -25,6 +25,31 @@ import {
 } from './drawing';
 import Controls from './Controls';
 import './SimulatorWrapper.css';
+import { CpuSchedulerSimulation } from './scheduling/CpuSchedulerSimulation';
+import type { SchedulingKind } from './scheduling/types';
+
+const M9_POLICIES: SchedulingKind[] = [
+  'FCFS',
+  'SJF',
+  'SRTF',
+  'RR',
+  'PRIORITY_NP',
+  'PRIORITY_P',
+];
+const M9_POLICY_LABELS = ['FCFS', 'SJF', 'SRTF', 'RR', 'Pri-NP', 'Pri-P'];
+
+function m9ApplyPolicyFromIdx(
+  cpu: CpuSchedulerSimulation,
+  policyIdx: number,
+  priPreempt: boolean,
+): void {
+  const pol = M9_POLICIES[policyIdx % M9_POLICIES.length];
+  cpu.configure({
+    policy: pol,
+    quantum: cpu.quantum,
+    priorityPreemptive: pol === 'PRIORITY_P' ? priPreempt : false,
+  });
+}
 
 interface SimulatorState {
   currentMode: number;
@@ -59,6 +84,10 @@ interface SimulatorState {
   m8MutexBr: SimMutex;
   m8SemPark: SimSemaphore;
   m8NextDest: string;
+  /** Simulación de PCB / planificación (modo 9). */
+  m9Cpu: CpuSchedulerSimulation;
+  m9PolicyIdx: number;
+  m9PriPreempt: boolean;
 }
 
 const ZONES = {
@@ -200,6 +229,26 @@ const INSTRUCTIONS: Record<number, InstructionData> = {
       'los botones.',
     ],
   },
+  9: {
+    title: 'MODO 9: Planificador de CPU (1 nucleo)',
+    subtitle: 'Motor en TS + vista p5 — ticks discretos',
+    bg: { r: 12, g: 18, b: 38 },
+    accent: { r: 120, g: 200, b: 255 },
+    lines: [
+      'Que simula: un unico nucleo; cada tick elige quien',
+      'corre 1 unidad de CPU o queda en I/O simulada.',
+      '',
+      'Que veras: CPU = RUNNING; azul = READY; naranja =',
+      'WAITING (I/O); gris en Gantt = CPU ociosa.',
+      '',
+      'Politicas: FCFS (FIFO listos), SJF (menor rafaga al',
+      'despachar), SRTF (expropia si hay mas corto), RR',
+      '(quantum Q=5), Pri-NP / Pri-P (+ preempt con [O]).',
+      '',
+      'Demo: animacion mas lenta solo en este modo.',
+      '[SPACE] proceso  [P] politica  [O] preempt Pri-P',
+    ],
+  },
 };
 
 export default function SimulatorWrapper() {
@@ -242,6 +291,9 @@ export default function SimulatorWrapper() {
     m8MutexBr: new SimMutex('Puente'),
     m8SemPark: new SimSemaphore('Parqueo', M8_PK_CAP),
     m8NextDest: 'auto',
+    m9Cpu: new CpuSchedulerSimulation(),
+    m9PolicyIdx: 0,
+    m9PriPreempt: true,
   });
 
   const triggerUpdate = useCallback(() => {
@@ -338,6 +390,16 @@ export default function SimulatorWrapper() {
     s.m8SemPark = new SimSemaphore('Parqueo', M8_PK_CAP); s.m8NextDest = 'auto';
     s.selectedCar = null; resetCarId(); s.eventsLog = [];
     addEvent('Modo 8: Completo');
+    triggerUpdate();
+  }, [addEvent, triggerUpdate]);
+
+  const m9Reset = useCallback(() => {
+    const s = stateRef.current;
+    s.m9Cpu.reset();
+    s.m9Cpu.configure({ quantum: 5 });
+    m9ApplyPolicyFromIdx(s.m9Cpu, s.m9PolicyIdx, s.m9PriPreempt);
+    s.eventsLog = [];
+    addEvent(`Modo 9: CPU / PCB — ${M9_POLICY_LABELS[s.m9PolicyIdx]}`);
     triggerUpdate();
   }, [addEvent, triggerUpdate]);
 
@@ -473,10 +535,11 @@ export default function SimulatorWrapper() {
         case 6: m6Reset(); break;
         case 7: m7Reset(); break;
         case 8: m8Reset(); break;
+        case 9: m9Reset(); break;
       }
     }
     triggerUpdate();
-  }, [m1Reset, m2Reset, m3Reset, m4Reset, m5Reset, m6Reset, m7Reset, m8Reset, triggerUpdate]);
+  }, [m1Reset, m2Reset, m3Reset, m4Reset, m5Reset, m6Reset, m7Reset, m8Reset, m9Reset, triggerUpdate]);
 
   const handleToggleInstructions = useCallback(() => {
     const s = stateRef.current;
@@ -499,8 +562,9 @@ export default function SimulatorWrapper() {
       case 6: m6Reset(); break;
       case 7: m7Reset(); break;
       case 8: m8Reset(); break;
+      case 9: m9Reset(); break;
     }
-  }, [m1Reset, m2Reset, m3Reset, m4Reset, m5Reset, m6Reset, m7Reset, m8Reset]);
+  }, [m1Reset, m2Reset, m3Reset, m4Reset, m5Reset, m6Reset, m7Reset, m8Reset, m9Reset]);
 
   const handleSpawn = useCallback((direction?: string) => {
     const s = stateRef.current;
@@ -513,8 +577,13 @@ export default function SimulatorWrapper() {
       case 6: m6Spawn(); break;
       case 7: m7SpawnPair(); break;
       case 8: m8Spawn(s.m8NextDest); break;
+      case 9: {
+        s.m9Cpu.spawnRandomDemo();
+        addEvent('M9 Nuevo proceso (CPU+I/O+CPU)');
+        break;
+      }
     }
-  }, [m1Spawn, m2Spawn, m3Spawn, m4Spawn, m5Spawn, m6Spawn, m7SpawnPair, m8Spawn]);
+  }, [m1Spawn, m2Spawn, m3Spawn, m4Spawn, m5Spawn, m6Spawn, m7SpawnPair, m8Spawn, addEvent]);
 
   const handleSpecialAction = useCallback((action: string) => {
     const s = stateRef.current;
@@ -534,6 +603,11 @@ export default function SimulatorWrapper() {
           triggerUpdate();
         } else if (s.currentMode === 8) {
           s.m8NextDest = 'pk';
+          triggerUpdate();
+        } else if (s.currentMode === 9) {
+          s.m9PolicyIdx = (s.m9PolicyIdx + 1) % M9_POLICIES.length;
+          m9ApplyPolicyFromIdx(s.m9Cpu, s.m9PolicyIdx, s.m9PriPreempt);
+          addEvent(`M9 Politica: ${M9_POLICY_LABELS[s.m9PolicyIdx]}`);
           triggerUpdate();
         }
         break;
@@ -556,6 +630,14 @@ export default function SimulatorWrapper() {
       case '0':
         if (s.currentMode === 8) { s.m8NextDest = 'auto'; triggerUpdate(); }
         break;
+      case 'o':
+        if (s.currentMode === 9) {
+          s.m9PriPreempt = !s.m9PriPreempt;
+          m9ApplyPolicyFromIdx(s.m9Cpu, s.m9PolicyIdx, s.m9PriPreempt);
+          addEvent(`M9 PriPreempt: ${s.m9PriPreempt ? 'ON' : 'OFF'}`);
+          triggerUpdate();
+        }
+        break;
     }
   }, [addEvent, m7ForceResolve, triggerUpdate]);
 
@@ -574,7 +656,7 @@ export default function SimulatorWrapper() {
       const applyLayout = () => {
         const host = canvasContainerRef.current;
         if (!host) return;
-        let { width: cw, height: ch } = host.getBoundingClientRect();
+        const { width: cw, height: ch } = host.getBoundingClientRect();
         // Sin tamaño real aún: no crear un lienzo de 2×2 px; el ResizeObserver volverá a medir.
         if (cw < 8 || ch < 8) {
           if (canvasCreated) return;
@@ -803,6 +885,212 @@ export default function SimulatorWrapper() {
         }
       };
 
+      const m9Step = () => {
+        /** Solo modo 9: 1 tick simulado cada N frames de p5 (demo mas lenta; otros modos no usan esto). */
+        const M9_FRAMES_PER_SIM_TICK = 10;
+        if (p.frameCount % M9_FRAMES_PER_SIM_TICK !== 0) return;
+        const cpu = s.m9Cpu;
+        const evs = cpu.step();
+        for (const e of evs) {
+          if (e.type === 'PREEMPT') {
+            addEvent(`M9 PREEMPT P${e.pid} ${e.reason}`);
+          } else if (e.type === 'TERMINATE') {
+            addEvent(`M9 TERM P${e.pid}`);
+          }
+        }
+      };
+
+      /** Texto multilinea acotado a un rectangulo (modo 9). */
+      const m9TextBox = (
+        txt: string,
+        x: number,
+        y: number,
+        w: number,
+        h: number,
+        sz: number,
+        rgb: [number, number, number],
+      ): void => {
+        p.push();
+        p.fill(rgb[0], rgb[1], rgb[2]);
+        p.noStroke();
+        p.textSize(sz);
+        p.textLeading(sz * 1.15);
+        p.textAlign(p.LEFT, p.TOP);
+        p.text(txt, x, y, w, h);
+        p.pop();
+      };
+
+      const m9Draw = () => {
+        drawSceneBg(p);
+        const snap = s.m9Cpu.getSnapshot();
+        const polLabel = M9_POLICY_LABELS[s.m9PolicyIdx % M9_POLICY_LABELS.length];
+        const pr =
+          snap.policy === 'PRIORITY_P' ? `  PreemptPri=${snap.priorityPreemptive ? 'ON' : 'off'}` : '';
+
+        drawPanel(p, 10, 8, 1180, 102);
+        m9TextBox(
+          'MODO 9: PCB y planificador (1 nucleo, tiempo discreto)',
+          22,
+          14,
+          1140,
+          22,
+          13,
+          [255, 200, 50],
+        );
+        m9TextBox(
+          `Politica: ${polLabel}  Quantum RR=${snap.quantum}${pr}`,
+          22,
+          36,
+          1140,
+          22,
+          10,
+          [190, 200, 220],
+        );
+        const m = snap.metrics;
+        const mtxt =
+          m.avgTurnaround != null
+            ? `Terminados=${m.terminatedCount}  T_retorno_medio=${m.avgTurnaround.toFixed(1)}  W_listo_medio=${(m.avgWait ?? 0).toFixed(1)}  U_CPU~${(m.cpuUtilization * 100).toFixed(0)}%  tick=${snap.nowTick}`
+            : `Terminados=0  U_CPU~${(snap.metrics.cpuUtilization * 100).toFixed(0)}%  tick=${snap.nowTick}`;
+        m9TextBox(mtxt, 22, 58, 1140, 44, 9, [150, 180, 200]);
+
+        const cpuX = 430;
+        const cpuW = 340;
+        drawPanel(p, cpuX, 118, cpuW, 168);
+        m9TextBox('CPU (RUNNING)', cpuX + 12, 124, cpuW - 24, 16, 11, [100, 200, 255]);
+        if (snap.running) {
+          const r = snap.running;
+          p.fill(50, 200, 110, 90);
+          p.noStroke();
+          p.rect(cpuX + 10, 146, cpuW - 20, 128, 8);
+          m9TextBox(
+            `${r.name}  pid=${r.pid}\nestado=${r.state}\nremCPU=${r.cpuBurstRemaining}  prioridad=${r.priority}`,
+            cpuX + 18,
+            154,
+            cpuW - 36,
+            112,
+            10,
+            [255, 255, 255],
+          );
+        } else {
+          p.fill(160, 160, 170);
+          p.noStroke();
+          p.textSize(13);
+          p.textAlign(p.CENTER, p.CENTER);
+          p.text('(CPU ociosa)', cpuX + cpuW / 2, 118 + 84);
+        }
+
+        const readyX = 20;
+        const readyW = 390;
+        drawPanel(p, readyX, 118, readyW, 168);
+        m9TextBox('COLA READY (listos, sin ejecutar)', readyX + 10, 124, readyW - 20, 28, 10, [100, 200, 255]);
+        let x = readyX + 12;
+        const yChip = 158;
+        const chipW = 72;
+        const chipH = 52;
+        for (let i = 0; i < snap.ready.length; i++) {
+          const q = snap.ready[i]!;
+          if (x + chipW > readyX + readyW - 8) break;
+          p.fill(70, 130, 200, 200);
+          p.stroke(120, 180, 255);
+          p.rect(x, yChip, chipW, chipH, 7);
+          m9TextBox(`P${q.pid}\nr=${q.cpuBurstRemaining}`, x + 4, yChip + 8, chipW - 8, chipH - 14, 9, [255, 255, 255]);
+          x += chipW + 8;
+        }
+        if (snap.ready.length === 0) {
+          m9TextBox('(vacia)', readyX + 12, yChip + 12, readyW - 24, 40, 10, [140, 140, 150]);
+        }
+
+        const waitX = 790;
+        const waitW = 380;
+        drawPanel(p, waitX, 118, waitW, 168);
+        m9TextBox('I/O (WAITING)', waitX + 10, 124, waitW - 20, 22, 11, [255, 200, 80]);
+        let wx = waitX + 12;
+        const yW = 158;
+        const wChipW = 78;
+        const wChipH = 52;
+        for (let i = 0; i < snap.waiting.length; i++) {
+          const wv = snap.waiting[i]!;
+          if (wx + wChipW > waitX + waitW - 8) break;
+          p.fill(180, 100, 60, 210);
+          p.stroke(255, 160, 80);
+          p.rect(wx, yW, wChipW, wChipH, 7);
+          m9TextBox(`P${wv.pid}\nio=${wv.remainingInPhase}`, wx + 4, yW + 8, wChipW - 8, wChipH - 14, 9, [255, 255, 255]);
+          wx += wChipW + 8;
+        }
+        if (snap.waiting.length === 0) {
+          m9TextBox('(vacia)', waitX + 12, yW + 12, waitW - 24, 40, 10, [140, 140, 150]);
+        }
+
+        drawPanel(p, 20, 298, 560, 88);
+        m9TextBox(
+          'NEW: llegada futura (no usado en spawn rapido; queda vacio salvo arrival>t)',
+          28,
+          304,
+          540,
+          36,
+          9,
+          [200, 200, 120],
+        );
+        const pendTxt =
+          snap.pendingNew.length > 0
+            ? snap.pendingNew.map((n) => `${n.name}@t${n.arrivalTime ?? '?'}`).join(', ')
+            : '(ninguno)';
+        m9TextBox(pendTxt, 28, 338, 540, 42, 9, [180, 180, 200]);
+
+        drawPanel(p, 600, 298, 590, 88);
+        m9TextBox('TERMINATED (ultimos PIDs)', 612, 304, 560, 20, 10, [160, 220, 160]);
+        const terms = snap.terminated.slice(-16);
+        const termStr = terms.length ? terms.map((t) => `P${t.pid}`).join(' ') : '(ninguno)';
+        m9TextBox(termStr, 612, 326, 560, 52, 10, [200, 220, 200]);
+
+        drawPanel(p, 20, 396, 1160, 108);
+        m9TextBox(
+          'MINI-GANTT: cada columna=1 tick simul. Gris=CPU sin trabajo; color=PID distinto.',
+          28,
+          402,
+          1120,
+          36,
+          10,
+          [100, 200, 255],
+        );
+        const g = snap.ganttRecent;
+        const gx0 = 28;
+        const gy = 438;
+        const gw = Math.min(g.length, 72);
+        const start = Math.max(0, g.length - 72);
+        for (let i = 0; i < gw; i++) {
+          const seg = g[start + i]!;
+          const pid = seg.pid;
+          const col =
+            pid < 0
+              ? [90, 90, 95]
+              : [(pid * 47) % 200 + 40, (pid * 89) % 180 + 60, (pid * 17) % 200 + 80];
+          p.fill(col[0], col[1], col[2], 220);
+          p.noStroke();
+          p.rect(gx0 + i * 15, gy, 13, 56, 3);
+        }
+
+        drawPanel(p, 20, H - 72, 1160, 62);
+        m9TextBox(
+          '[SPACE] nuevo proceso demo  |  [P] siguiente politica  |  [O] preempt en Pri-P',
+          28,
+          H - 66,
+          1120,
+          22,
+          9,
+          [170, 185, 205],
+        );
+        m9TextBox(
+          'Velocidad: 1 tick simulado cada 10 frames (solo este modo). No es el planificador real del PC.',
+          28,
+          H - 44,
+          1120,
+          28,
+          8,
+          [140, 150, 170],
+        );
+      };
+
       // Simplified draw functions
       const m1Draw = () => {
         drawSceneBg(p); drawHRoad(p, 0, 270, W, 200); drawVRoad(p, 500, 0, 200, H); drawCrosswalks(p, ZONES.m1);
@@ -887,7 +1175,7 @@ export default function SimulatorWrapper() {
         drawHRoad(p, 0, 270, 480, 100); drawHRoad(p, 870, 270, W - 870, 100);
         p.fill(118, 90, 62); p.stroke(185, 155, 110); p.strokeWeight(3);
         p.rect(ZONES.m6Bridge.x, ZONES.m6Bridge.y, ZONES.m6Bridge.w, ZONES.m6Bridge.h, 8);
-        drawDigitalBoard(p, 400, 200, 110, 48, 'POL.', POLICY_NAMES[s.m6Policy], true);
+        drawDigitalBoard(p, 268, 200, 220, 52, 'POL.', POLICY_NAMES[s.m6Policy], true);
         drawBarrier(p, 474, 320, s.m6Mutex.owner === null, false);
         p.fill(255, 205); p.textAlign(p.CENTER, p.CENTER); p.textSize(14);
         p.text(POLICY_NAMES[s.m6Policy], ZONES.m6Bridge.x + ZONES.m6Bridge.w / 2, ZONES.m6Bridge.y + ZONES.m6Bridge.h / 2);
@@ -971,7 +1259,8 @@ export default function SimulatorWrapper() {
         switch (s.currentMode) {
           case 1: return s.m1Cars; case 2: return s.m2Cars; case 3: return s.m3Cars;
           case 4: return s.m4Cars; case 5: return s.m5Cars; case 6: return s.m6Cars;
-          case 7: return s.m7Cars; case 8: return s.m8Cars; default: return [];
+          case 7: return s.m7Cars; case 8: return s.m8Cars; case 9: return [];
+          default: return [];
         }
       };
 
@@ -991,6 +1280,7 @@ export default function SimulatorWrapper() {
             case 3: m3Step(); m3Draw(); break; case 4: m4Step(); m4Draw(); break;
             case 5: m5Step(); m5Draw(); break; case 6: m6Step(); m6Draw(); break;
             case 7: m7Step(); m7Draw(); break; case 8: m8Step(); m8Draw(); break;
+            case 9: m9Step(); m9Draw(); break;
           }
           drawGlobalHUD();
         }
@@ -1009,6 +1299,25 @@ export default function SimulatorWrapper() {
             break;
           }
         }
+      };
+
+      p.keyPressed = () => {
+        if (s.showInstructions) return;
+        if (s.currentMode !== 9) return;
+        const k = p.key.toLowerCase();
+        if (k === ' ') {
+          s.m9Cpu.spawnRandomDemo();
+          addEvent('M9 Nuevo proceso');
+        } else if (k === 'p') {
+          s.m9PolicyIdx = (s.m9PolicyIdx + 1) % M9_POLICIES.length;
+          m9ApplyPolicyFromIdx(s.m9Cpu, s.m9PolicyIdx, s.m9PriPreempt);
+          addEvent(`M9 Politica: ${M9_POLICY_LABELS[s.m9PolicyIdx]}`);
+        } else if (k === 'o') {
+          s.m9PriPreempt = !s.m9PriPreempt;
+          m9ApplyPolicyFromIdx(s.m9Cpu, s.m9PolicyIdx, s.m9PriPreempt);
+          addEvent(`M9 PriPreempt: ${s.m9PriPreempt ? 'ON' : 'OFF'}`);
+        }
+        triggerUpdate();
       };
 
       p.windowResized = () => {
@@ -1040,7 +1349,7 @@ export default function SimulatorWrapper() {
       p5Ref.current?.remove();
       p5Ref.current = null;
     };
-  }, [addEvent, cleanCarFromAll, m1Reset, m1Spawn, m2Reset, m2Spawn, m3Reset, m3Spawn, m4ForceExit, m4Reset, m4Spawn, m5ForceExit, m5Reset, m5Spawn, m6Reset, m6Spawn, m7ForceResolve, m7Reset, m7SpawnPair, m8Reset, m8Spawn]);
+  }, [addEvent, cleanCarFromAll, m1Reset, m1Spawn, m2Reset, m2Spawn, m3Reset, m3Spawn, m4ForceExit, m4Reset, m4Spawn, m5ForceExit, m5Reset, m5Spawn, m6Reset, m6Spawn, m7ForceResolve, m7Reset, m7SpawnPair, m8Reset, m8Spawn, m9Reset, triggerUpdate]);
 
   const s = stateRef.current;
 
@@ -1060,6 +1369,8 @@ export default function SimulatorWrapper() {
           m6Policy={s.m6Policy}
           m7Prevent={s.m7Prevent}
           m8NextDest={s.m8NextDest}
+          m9PolicyIdx={s.m9PolicyIdx}
+          m9PriPreempt={s.m9PriPreempt}
         />
       </div>
     </div>
